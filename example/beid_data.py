@@ -4,7 +4,6 @@
 # 
 # https://github.com/Fedict/eid-mw
 #
-# https://nlnetlabs.nl/downloads/publications/hsm/hsm_node9.html
 # pkcs11-tool -L -v --module ./cardcomm/pkcs11/src/.libs/libbeidpkcs11.so
 #
 import os
@@ -22,7 +21,7 @@ ck_callback_function = re.compile(r'typedef CK_CALLBACK_FUNCTION\((?P<returnType
 #
 # type definitions
 #
-pkcs11t = os.path.join('doc', 'sdk', 'include', 'rsaref220', 'pkcs11t.h')
+pkcs11t = os.path.join('..', 'src', 'pkcs11', 'inc', 'pkcs11t.h')
 type_definitions = []
 with open(pkcs11t) as definition_file:
     for line in definition_file.readlines():
@@ -126,8 +125,8 @@ CK_RV C_GetAttributeValue (
 
 """)
 
-eid_lib = ffi.dlopen('./cardcomm/pkcs11/src/.libs/libbeidpkcs11.so')
-#eid_lib = ffi.dlopen('/usr/lib/x86_64-linux-gnu/libbeidpkcs11.so.0')
+#eid_lib = ffi.dlopen('./cardcomm/pkcs11/src/.libs/libbeidpkcs11.so')
+eid_lib = ffi.dlopen('/usr/lib/x86_64-linux-gnu/libbeidpkcs11.so.0')
 if eid_lib.C_Initialize(ffi.NULL) != 0:
     raise Exception('failed initialization')
 
