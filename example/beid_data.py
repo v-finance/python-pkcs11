@@ -125,6 +125,9 @@ CK_RV C_GetAttributeValue (
 
 """)
 
+# the self compiled module appears not to work, because it cannot ask
+# a question on wether the application can access the card
+
 #eid_lib = ffi.dlopen('./cardcomm/pkcs11/src/.libs/libbeidpkcs11.so')
 eid_lib = ffi.dlopen('/usr/lib/x86_64-linux-gnu/libbeidpkcs11.so.0')
 if eid_lib.C_Initialize(ffi.NULL) != 0:
@@ -161,14 +164,20 @@ for i in range(slot_count[0]):
         ffi.NULL, ffi.NULL,
         session)
     class_type = ffi.new("CK_ULONG[]", [eid_lib.CKO_DATA])
+    label = ffi.new("char[]", b"surname")
     object_template = ffi.new(
-        'CK_ATTRIBUTE_PTR',
-        {'type':eid_lib.CKA_CLASS, 'pValue':class_type,
-         'ulValueLen':ffi.sizeof('CK_ULONG')}
+        'CK_ATTRIBUTE[2]',[
+        {'type':eid_lib.CKA_CLASS,
+         'pValue':class_type,
+         'ulValueLen':ffi.sizeof('CK_ULONG')},
+        {'type':eid_lib.CKA_LABEL,
+         'pValue':label,
+         'ulValueLen':ffi.sizeof("char")*len(b"surname")}
+        ]
     )
     object_handle = ffi.new('CK_OBJECT_HANDLE*')
     object_count = ffi.new('CK_ULONG_PTR')
-    ret_val = eid_lib.C_FindObjectsInit(session[0], object_template, 1)
+    ret_val = eid_lib.C_FindObjectsInit(session[0], object_template, 2)
     print('find objects init : ', hex(ret_val))
     assert ret_val==0
     object_count[0] = 1
@@ -176,18 +185,17 @@ for i in range(slot_count[0]):
     while object_count[0] > 0:
         eid_lib.C_FindObjects(session[0], object_handle, 1, object_count)
         print('object id :', object_handle[0])
-        label_template = ffi.new(
+        value_template = ffi.new(
             'CK_ATTRIBUTE*',
-            {'type':eid_lib.CKA_LABEL, 'pValue':ffi.NULL, 'ulValueLen':0}
+            {'type':eid_lib.CKA_VALUE, 'pValue':ffi.NULL, 'ulValueLen':0}
         )
-        eid_lib.C_GetAttributeValue(session[0], object_handle[0], label_template, 1)
-        print('label size', label_template[0].ulValueLen)
-        if label_template[0].ulValueLen > 0:
-            label_template[0].pValue = ffi.new('char[]', label_template[0].ulValueLen)
-            eid_lib.C_GetAttributeValue(session[0], object_handle[0], label_template, 1)
-            value = ffi.cast('char*', label_template[0].pValue)
-            print('label : ', ffi.string(value, label_template[0].ulValueLen))
-            #print('object label', ffi.string(label_template[0].pValue, label_template[0].ulValueLen))
+        eid_lib.C_GetAttributeValue(session[0], object_handle[0], value_template, 1)
+        print('value size', value_template[0].ulValueLen)
+        if value_template[0].ulValueLen > 0:
+            value_template[0].pValue = ffi.new('char[]', value_template[0].ulValueLen)
+            eid_lib.C_GetAttributeValue(session[0], object_handle[0], value_template, 1)
+            value = ffi.cast('char*', value_template[0].pValue)
+            print('value : ', ffi.string(value, value_template[0].ulValueLen))
     eid_lib.C_FindObjectsFinal(session[0])
     eid_lib.C_CloseSession(session[0])
 
