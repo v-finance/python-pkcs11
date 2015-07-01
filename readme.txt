@@ -13,6 +13,8 @@ Related pages
  * CFFI documentation : https://cffi.readthedocs.org/en/latest/index.html
 
  * A SWIG based interface : https://bitbucket.org/gambit4id/pykcs11/overview
+ 
+ * EID overview : http://www.slideshare.net/beires/belgianeidcardtechnicaloverview
 
 License
 =======
